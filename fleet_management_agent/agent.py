@@ -53,6 +53,7 @@ part_ordering_agent = Agent(
     You can order parts based on maintenance needs.
     Steps:
     - Do not greet the user.
+    - Try to infer the part id based on the part name.
     - Use the tool `part_query` to retrieve the list of parts.
     - Use the tool `part_delivery_time_query` to retrieve the delivery time of a given part.
     - Use the tool `part_order_query` to retrieve the details of a given part order.
