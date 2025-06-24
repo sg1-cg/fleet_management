@@ -62,7 +62,7 @@ part_ordering_agent = Agent(
     tools=[part_query, part_delivery_time_query, part_order_query, create_part_order]
 )
 
-# Appointment scheduling agent
+# Appointment scheduling sub-agent
 appointment_scheduling_agent = Agent(
     name="appointment_scheduling_agent",
     model="gemini-2.0-flash",
@@ -71,9 +71,12 @@ appointment_scheduling_agent = Agent(
     You can schedule service appointments based on part orders.
     Steps:
     - Do not greet the user.
+    - Ask for the order ID of the part order to schedule an appointment for.
+    - Propose a date and time for the appointment based on order delivery date and vehicle rentals.
+    - ALWAYS confirm the appointment details by the user before creating an appointment.
+    - Use the tool `part_order_query` to retrieve the details of a given part order.
     - Use the tool `vehicle_rental_query` to retrieve the future rental dates of a given vehicle.
     - Use the tool `create_appointment` to create a new service appointment.
-    - Use the tool `part_order_query` to retrieve the details of a given part order.
     - Provide a brief summary of the appointment.
     - Transfer back to the parent agent without saying anything else.""",
     tools=[vehicle_rental_query, create_appointment, part_order_query]
@@ -104,7 +107,7 @@ root_agent = Agent(
     - Ask how you can help.
     After the user's request has been answered by you or a child agent, ask if there's anything else you can do to help. 
     When the user doesn't need anything else, politely thank them for contacting AIgentic Fleet Management.""",
-    sub_agents=[recall_agent, predictive_maintenance_agent, part_ordering_agent, notification_agent],
+    sub_agents=[recall_agent, predictive_maintenance_agent, part_ordering_agent, appointment_scheduling_agent, notification_agent],
     tools=[],
     model="gemini-2.0-flash"
 )

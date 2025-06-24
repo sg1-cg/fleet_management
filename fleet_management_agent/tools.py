@@ -1,3 +1,5 @@
+import datetime
+import decimal
 import requests
 from google.cloud import bigquery
 
@@ -8,7 +10,15 @@ def db_query(query: str):
         query_job = client.query(query)
         results = query_job.result()
         df = results.to_dataframe()
-        return df.to_dict('records')
+        data = df.to_dict('records')
+        for row in data:
+            for key, value in row.items():
+                if isinstance(value, datetime.date):
+                    row[key] = value.isoformat()
+                elif isinstance(value, decimal.Decimal):
+                    row[key] = float(value)  # or str(value) to preserve precision as a string
+        return data
+
     except Exception as e:
         error_message = f"An error occured with BigQuery: {e}"
         # Handle errors, potentially fallback to alternate data source
