@@ -79,6 +79,62 @@ def health_query(vehicle_id: str):
         return {"error": error_message}
 
 
+def part_query():
+    """
+    Retrieves the vehicle parts from the database.
+
+    Returns:
+        dict: The list of vehicle parts.
+    """
+    try:
+        client = bigquery.Client()
+        query = f"""
+        SELECT *
+        FROM `EV_Predictive_Maintenance.PART`
+        ORDER BY `Name` ASC
+        LIMIT 100
+        """
+        query_job = client.query(query)
+        results = query_job.result()
+        df = results.to_dataframe()
+        return df.to_dict('records')
+    except Exception as e:
+        error_message = f"An error occured with BigQuery: {e}"
+        # Handle errors, potentially fallback to alternate data source
+        # Fallback logic would go here if needed
+        return {"error": error_message}
+
+
+def vehicle_appointment_query(vehicle_id: str):
+    """
+    Retrieves the future service appointments of a vehicle from the database.
+
+    Args:
+        vehicle_id (str): The unique identifier of the vehicle.
+
+    Returns:
+        dict: The future service appointments of the vehicle.
+    """
+    try:
+        client = bigquery.Client()
+        query = f"""
+        SELECT *
+        FROM `EV_Predictive_Maintenance.APPOINTMENT`
+        WHERE `Vehicle_ID` = '{vehicle_id}'
+        ORDER BY `Time` ASC
+        LIMIT 10
+        """
+        query_job = client.query(query)
+        results = query_job.result()
+        df = results.to_dataframe()
+        return df.to_dict('records')
+    except Exception as e:
+        error_message = f"An error occured with BigQuery: {e}"
+        # Handle errors, potentially fallback to alternate data source
+        # Fallback logic would go here if needed
+        return {"error": error_message}
+
+
 def vehicle_rental_query(vehicle_id: str):
     """
     Retrieves the future rental dates of a vehicle from the database.
@@ -133,6 +189,36 @@ def part_delivery_time_query(part_id: str):
             AND `Valid_From` <= CURRENT_DATE()
         )
         LIMIT 1
+        """
+        query_job = client.query(query)
+        results = query_job.result()
+        df = results.to_dataframe()
+        return df.to_dict('records')
+    except Exception as e:
+        error_message = f"An error occured with BigQuery: {e}"
+        # Handle errors, potentially fallback to alternate data source
+        # Fallback logic would go here if needed
+        return {"error": error_message}
+
+
+def part_order_query(order_id: str):
+    """
+    Retrieves the details of the part order from the database.
+
+    Args:
+        order_id (str): The unique identifier of the part order.
+
+    Returns:
+        dict: The details of the part order.
+    """
+    try:
+        client = bigquery.Client()
+        query = f"""
+        SELECT *
+        FROM `EV_Predictive_Maintenance.PART_ORDER`
+        WHERE `Order_ID` = '{order_id}'
+        ORDER BY `Arrival_Date` DESC
+        LIMIT 10
         """
         query_job = client.query(query)
         results = query_job.result()
