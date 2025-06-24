@@ -15,7 +15,7 @@ recall_agent = Agent(
     You can retrieve car recall information based on make, model and model year.
     Steps:
     - Do not greet the user.
-    - Ask for car make, model and model year.
+    - Ask for car make, model and model year or query the database for the list of vehicles if requested.
     - Use the tool `fleet_query` to retrieve the list of fleet make, model and model year if instructed to do so.
     - Use the tool `recall_query` to retrieve car recall information.
     - Provide a brief summary of related recalls.
