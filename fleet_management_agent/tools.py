@@ -73,6 +73,40 @@ def health_query(vehicle_id: str):
     return db_query(query)
 
 
+def health_bulk_query():
+    """
+    Retrieves the most recent health data of all vehicles in the fleet from the database.
+
+    Returns:
+        dict: The health data of all vehicles in the fleet.
+    """
+    query = f"""
+    select pm1.*
+    from `EV_Predictive_Maintenance.PM` pm1
+    , (select max(Timestamp) Timestamp, Vehicle_ID from `EV_Predictive_Maintenance.PM` group by Vehicle_ID) pm2
+    where pm1.Timestamp=pm2.Timestamp and pm1.Vehicle_ID=pm2.Vehicle_ID
+    order by pm1.Timestamp desc
+    limit 100
+    """
+    return db_query(query)
+
+
+def vehicle_query(vehicle_id: str):
+    """
+    Retrieves the details of a vehicle from the database.
+
+    Args:
+        vehicle_id: The unique identifier of the vehicle.
+
+    Returns:
+        dict: The details of the vehicle.
+    """
+    query = f"""
+    SELECT *
+    FROM `EV_Predictive_Maintenance.VEHICLE`
+    WHERE `Vehicle_ID` = '{vehicle_id}'
+    """
+    return db_query(query)
 
 
 def part_query():
@@ -143,7 +177,7 @@ def part_delivery_time_query(part_id: str):
         dict: the current part delivery time in days of the vehicle part.
     """
     query = f"""
-    SELECT `Part_ID`, `Valid_From`
+    SELECT `Delivery_Time`
     FROM `EV_Predictive_Maintenance.PART_DELIVERY`
     WHERE `Part_ID` = '{part_id}'
     AND `Valid_From` = (
@@ -173,6 +207,62 @@ def part_order_query(order_id: str):
     WHERE `Order_ID` = '{order_id}'
     ORDER BY `Arrival_Date` DESC
     LIMIT 10
+    """
+    return db_query(query)
+
+
+def create_part_order(part_id: str, quantity: int):
+    """
+    Creates a new part order in the database.
+
+    Args:
+        part_id (str): The unique identifier of the vehicle part.
+        quantity (int): The quantity of the part to order.
+
+    Returns:
+        dict: The details of the created part order.
+    """
+    query = f"""
+    INSERT INTO `EV_Predictive_Maintenance.PART_ORDER` (Order_ID, Part_ID, Amount, Arrival_Date, Last_Update_Time, Price, State)
+    select GENERATE_UUID()
+    , pd.part_id
+    , {quantity}
+    , current_date()+pd.Delivery_Time
+    , current_timestamp()
+    , cast(rand()*(10-10000)+10000 as numeric)
+    , 'Pending'
+    from `EV_Predictive_Maintenance.PART_DELIVERY` pd
+    where pd.valid_from < current_date()
+    and pd.part_id = '{part_id}'
+    """
+    return db_query(query)
+
+
+def create_appointment(vehicle_id: str, time: str, place: str, order_id: str):
+    """
+    Creates a new service appointment in the database.
+
+    Args:
+        vehicle_id (str): The unique identifier of the vehicle.
+        time (str): The date and time of the appointment.
+        place (str): The place of the appointment (Country, City, Street).
+        order_id (str): The unique identifier of the part order.
+
+    Returns:
+        dict: The details of the created appointment.
+    """
+    query = f"""
+    INSERT INTO `EV_Predictive_Maintenance.APPOINTMENT` (Appointment_ID,
+        Time,
+        Place,
+        Order_ID,
+        Vehicle_ID)
+    VALUES
+    ( GENERATE_UUID()
+    , '{time}'
+    , '{place}'
+    , '{order_id}'
+    , '{vehicle_id}');
     """
     return db_query(query)
 

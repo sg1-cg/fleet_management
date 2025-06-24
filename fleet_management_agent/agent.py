@@ -1,7 +1,7 @@
 from google.adk.agents import Agent
 
 # Import the tools
-from .tools import fleet_query, recall_query, health_query, notify
+from .tools import fleet_query, recall_query, health_query, health_bulk_query, part_query, vehicle_appointment_query, vehicle_rental_query, part_delivery_time_query, part_order_query, create_part_order, create_appointment, vehicle_query, notify
 
 
 # Agents
@@ -33,12 +33,32 @@ predictive_maintenance_agent = Agent(
     You can retrieve car health information.
     Steps:
     - Do not greet the user.
-    - Ask for vehicle id.
-    - Use the tool `health_query` to retrieve the actual health information of the vehicle.
+    - Use the tool `health_query` to retrieve the actual health information for a given vehicle.
+    - Use the tool `health_bulk_query` to retrieve the actual health information for every vehicle.
+    - Use the tool `vehicle_query` to retrieve the details of a given vehicle.
+    - Use the tool `vehicle_appointment_query` to retrieve the future service appointments of a given vehicle.
     - Provide a brief summary of health information.
     - Predict the maintenance needs based on the health information, identify components that need replacement.
     - Transfer back to the parent agent without saying anything else.""",
-    tools=[health_query]
+    tools=[health_query, health_bulk_query, vehicle_query, vehicle_appointment_query]
+)
+
+# Part ordering sub-agent
+part_ordering_agent = Agent(
+    name="part_ordering_agent",
+    model="gemini-2.0-flash",
+    description="Orders parts based on maintenance needs.",
+    instruction="""You are a specialized part ordering assistance agent.
+    You can order parts based on maintenance needs.
+    Steps:
+    - Do not greet the user.
+    - Use the tool `part_query` to retrieve the list of parts.
+    - Use the tool `part_delivery_time_query` to retrieve the delivery time of a given part.
+    - Use the tool `part_order_query` to retrieve the details of a given part order.
+    - Use the tool `create_part_order` to create a new part order.
+    - Provide a brief summary of the order.
+    - Transfer back to the parent agent without saying anything else.""",
+    tools=[part_query, part_delivery_time_query, part_order_query, create_part_order]
 )
 
 # Notification sub-agent
@@ -66,7 +86,7 @@ root_agent = Agent(
     - Ask how you can help.
     After the user's request has been answered by you or a child agent, ask if there's anything else you can do to help. 
     When the user doesn't need anything else, politely thank them for contacting AIgentic Fleet Management.""",
-    sub_agents=[recall_agent, predictive_maintenance_agent, notification_agent],
+    sub_agents=[recall_agent, predictive_maintenance_agent, part_ordering_agent, notification_agent],
     tools=[],
     model="gemini-2.0-flash"
 )
