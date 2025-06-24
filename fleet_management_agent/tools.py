@@ -79,6 +79,36 @@ def health_query(vehicle_id: str):
         return {"error": error_message}
 
 
+def vehicle_rental_query(vehicle_id: str):
+    """
+    Retrieves the future rental dates of a vehicle from the database.
+
+    Args:
+        vehicle_id (str): The unique identifier of the vehicle.
+
+    Returns:
+        dict: The future rental dates of the vehicle.
+    """
+    try:
+        client = bigquery.Client()
+        query = f"""
+        SELECT *
+        FROM `EV_Predictive_Maintenance.RENTAL`
+        WHERE `Vehicle_ID` = '{vehicle_id}'
+        ORDER BY `Timestamp` DESC
+        LIMIT 10
+        """
+        query_job = client.query(query)
+        results = query_job.result()
+        df = results.to_dataframe()
+        return df.to_dict('records')
+    except Exception as e:
+        error_message = f"An error occured with BigQuery: {e}"
+        # Handle errors, potentially fallback to alternate data source
+        # Fallback logic would go here if needed
+        return {"error": error_message}
+
+
 def notify(message: str):
     """
     Sends a notification.
