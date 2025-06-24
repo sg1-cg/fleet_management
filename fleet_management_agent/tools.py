@@ -95,8 +95,44 @@ def vehicle_rental_query(vehicle_id: str):
         SELECT *
         FROM `EV_Predictive_Maintenance.RENTAL`
         WHERE `Vehicle_ID` = '{vehicle_id}'
-        ORDER BY `Timestamp` DESC
+        AND `Date_From` <= CURRENT_DATE()
+        ORDER BY `Date_From` ASC
         LIMIT 10
+        """
+        query_job = client.query(query)
+        results = query_job.result()
+        df = results.to_dataframe()
+        return df.to_dict('records')
+    except Exception as e:
+        error_message = f"An error occured with BigQuery: {e}"
+        # Handle errors, potentially fallback to alternate data source
+        # Fallback logic would go here if needed
+        return {"error": error_message}
+
+
+def part_delivery_time_query(part_id: str):
+    """
+    Retrieves the current part delivery time in days of a vehicle part from the database.
+
+    Args:
+        part_id (str): The unique identifier of the vehicle part.
+
+    Returns:
+        dict: the current part delivery time in days of the vehicle part.
+    """
+    try:
+        client = bigquery.Client()
+        query = f"""
+        SELECT `Part_ID`, `Valid_From`
+        FROM `EV_Predictive_Maintenance.PART_DELIVERY`
+        WHERE `Part_ID` = '{part_id}'
+        AND `Valid_From` = (
+            SELECT MAX(`Valid_From`)
+            FROM `EV_Predictive_Maintenance.PART_DELIVERY`
+            WHERE `Part_ID` = '{part_id}'
+            AND `Valid_From` <= CURRENT_DATE()
+        )
+        LIMIT 1
         """
         query_job = client.query(query)
         results = query_job.result()
