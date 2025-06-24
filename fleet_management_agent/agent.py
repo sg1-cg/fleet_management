@@ -40,7 +40,7 @@ predictive_maintenance_agent = Agent(
     - Use the tool `vehicle_appointment_query` to retrieve the future service appointments of a given vehicle.
     - Provide a brief summary of health information.
     - Predict the maintenance needs based on the health information, identify components that need replacement.
-    - Transfer back to the parent agent without saying anything else.""",
+    - Ask if you can help with anything else regarding maintenance, if not transfer back to the parent agent.""",
     tools=[health_query, health_bulk_query, vehicle_query, vehicle_appointment_query]
 )
 

@@ -101,20 +101,20 @@ def health_bulk_query():
     return db_query(query)
 
 
-def vehicle_query(vehicle_id: str):
+def vehicle_query(vehicle_id: list[str]):
     """
-    Retrieves the details of a vehicle from the database.
+    Retrieves the details of vehicles from the database.
 
     Args:
-        vehicle_id: a comma separated list of vehicle IDs.
+        vehicle_id: a list of vehicle IDs.
 
     Returns:
-        dict: The details of the vehicle.
+        dict: The details of the vehicles.
     """
     query = f"""
     SELECT *
     FROM `EV_Predictive_Maintenance.VEHICLE`
-    WHERE `Vehicle_ID` in '{vehicle_id}'
+    WHERE `Vehicle_ID` in UNNEST({vehicle_id})
     """
     return db_query(query)
 
