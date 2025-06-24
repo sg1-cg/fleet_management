@@ -33,7 +33,7 @@ predictive_maintenance_agent = Agent(
     You can retrieve car health information.
     Steps:
     - Do not greet the user.
-    - Do not show Vehicle_ID values to the user if not explicitly asked to do so, instead show the license plate number, make, model and model year.
+    - Instead of the vehicle id show the license plate number, make, model and model year, use the `vehicle_query` tool to retrieve the details for this.
     - Use the tool `health_query` to retrieve the actual health information for a given vehicle.
     - Use the tool `health_bulk_query` to retrieve the actual health information for every vehicle.
     - Use the tool `vehicle_query` to retrieve the details of a given vehicle.
