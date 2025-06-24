@@ -96,7 +96,7 @@ def vehicle_query(vehicle_id: str):
     Retrieves the details of a vehicle from the database.
 
     Args:
-        vehicle_id: The unique identifier of the vehicle.
+        vehicle_id: a comma separated list of vehicle IDs.
 
     Returns:
         dict: The details of the vehicle.
@@ -104,7 +104,7 @@ def vehicle_query(vehicle_id: str):
     query = f"""
     SELECT *
     FROM `EV_Predictive_Maintenance.VEHICLE`
-    WHERE `Vehicle_ID` = '{vehicle_id}'
+    WHERE `Vehicle_ID` in '{vehicle_id}'
     """
     return db_query(query)
 

@@ -33,6 +33,7 @@ predictive_maintenance_agent = Agent(
     You can retrieve car health information.
     Steps:
     - Do not greet the user.
+    - Do not show Vehicle_ID values to the user if not explicitly asked to do so, instead show the license plate number, make, model and model year.
     - Use the tool `health_query` to retrieve the actual health information for a given vehicle.
     - Use the tool `health_bulk_query` to retrieve the actual health information for every vehicle.
     - Use the tool `vehicle_query` to retrieve the details of a given vehicle.
@@ -59,6 +60,23 @@ part_ordering_agent = Agent(
     - Provide a brief summary of the order.
     - Transfer back to the parent agent without saying anything else.""",
     tools=[part_query, part_delivery_time_query, part_order_query, create_part_order]
+)
+
+# Appointment scheduling agent
+appointment_scheduling_agent = Agent(
+    name="appointment_scheduling_agent",
+    model="gemini-2.0-flash",
+    description="Schedules service appointments based on part orders.",
+    instruction="""You are a specialized appointment scheduling assistance agent.
+    You can schedule service appointments based on part orders.
+    Steps:
+    - Do not greet the user.
+    - Use the tool `vehicle_rental_query` to retrieve the future rental dates of a given vehicle.
+    - Use the tool `create_appointment` to create a new service appointment.
+    - Use the tool `part_order_query` to retrieve the details of a given part order.
+    - Provide a brief summary of the appointment.
+    - Transfer back to the parent agent without saying anything else.""",
+    tools=[vehicle_rental_query, create_appointment, part_order_query]
 )
 
 # Notification sub-agent
