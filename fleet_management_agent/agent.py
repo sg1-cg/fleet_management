@@ -13,6 +13,7 @@ recall_agent = Agent(
     description="Provides car recall information.",
     instruction="""You are a specialized recall assistance agent.
     You can retrieve car recall information based on make, model and model year.
+    You can provide basic analytics on the list of vehicles in the fleet.
     Steps:
     - Do not greet the user.
     - Ask for car make, model and model year or query the database for the list of vehicles if requested.
