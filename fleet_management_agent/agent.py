@@ -1,7 +1,11 @@
 from google.adk.agents import Agent
 
 # Import the tools
-from .tools import fleet_query, recall_query, health_query, health_bulk_query, part_query, vehicle_appointment_query, vehicle_rental_query, part_delivery_time_query, part_order_query, create_part_order, create_appointment, vehicle_query, notify
+from .tools import fleet_query, recall_query, health_query
+from .tools import health_bulk_query, part_query, vehicle_appointment_query
+from .tools import vehicle_rental_query, part_delivery_time_query, part_order_query
+from .tools import create_part_order, create_appointment, vehicle_query, vehicle_list
+from .tools import notify
 
 
 # Agents
@@ -17,11 +21,11 @@ recall_agent = Agent(
     Steps:
     - Do not greet the user.
     - Ask for car make, model and model year or query the database for the list of vehicles if requested.
-    - Use the tool `fleet_query` to retrieve the list of fleet make, model and model year if instructed to do so.
+    - Use the tool `vehicle_list` to retrieve the list of vehicles in the fleet.
     - Use the tool `recall_query` to retrieve car recall information.
-    - Provide a brief summary of related recalls.
+    - Provide a brief summary of related recalls and their impact regarding the fleet highlighting the number of vehicles involved.
     - Transfer back to the parent agent without saying anything else.""",
-    tools=[fleet_query, recall_query]
+    tools=[recall_query, vehicle_list]
 )
 
 # Predictive maintenance sub-agent

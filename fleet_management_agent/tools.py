@@ -100,6 +100,18 @@ def health_bulk_query():
     """
     return db_query(query)
 
+def vehicle_list():
+    """
+    Retrieves the details of all vehicles from the database.
+
+    Returns:
+        dict: The details of the vehicles.
+    """
+    query = f"""
+    SELECT *
+    FROM `EV_Predictive_Maintenance.VEHICLE`
+    """
+    return db_query(query)
 
 def vehicle_query(vehicle_id: list[str]):
     """
