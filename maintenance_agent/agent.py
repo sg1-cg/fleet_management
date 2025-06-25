@@ -137,11 +137,14 @@ merger_agent = Agent(
     ### Vehicle Recall Findings
     (Based on recall_agent's findings)
     [Synthesize and elaborate *only* on the vehicle recall input summary provided above.]
+
     ### Vehicle Maintenance Findings
     (Based on predictive_maintenance_agent's findings)
     [Synthesize and elaborate *only* on the vehicle maintenance input summary provided above.]
+    
     ### Overall Summary
     [Provide a brief summary of *only* the findings presented above.]
+    
     Output *only* the structured report following this format. Do not include introductory or concluding phrases outside this structure, and strictly adhere to using only the provided input summary content.
     """,
     description="Combines research findings from parallel agents into a structured report, strictly grounded on provided inputs.",
