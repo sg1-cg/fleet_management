@@ -257,9 +257,6 @@ sequential_maintenance_agent = SequentialAgent(
 )
 
 # The main agent
-#root_agent = sequential_pipeline_agent
-
-# The main agent
 root_agent = Agent(
     name="root_agent",
     global_instruction="""You are a helpful virtual assistant for a commercial car fleet management company. Always respond politely.""",
