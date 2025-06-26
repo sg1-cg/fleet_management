@@ -64,7 +64,7 @@ part_ordering_agent = Agent(
     You can order parts based on maintenance needs.
     Steps:
     - Do not greet the user.
-    - Try to infer the part id based on the part name.
+    - Infer the part id based on the part name.
     - ALWAYS confirm the order details by the user before creating a part order.
     - Use the tool `part_query` to retrieve the list of parts.
     - Use the tool `part_delivery_time_query` to retrieve the delivery time of a given part.
@@ -98,7 +98,7 @@ appointment_critic_agent = Agent(
     name="appointment_critic_agent",
     model=MODEL,
     description="Checks if the appointment is valid and reasonable, minimizing service interruption.",
-    instruction="""You are a specialized appointment critic assistance agent.
+    instruction=f"""You are a specialized appointment critic assistance agent.
     You can check if the appointment is valid and reasonable, taking into account vehicle rentals to minimize service interruption.
     **Appointments to Review:**
     ```
@@ -124,7 +124,7 @@ appointment_refinement_agent = Agent(
     name="appointment_refinement_agent",
     model=MODEL,
     description="Refines appointment details based on feedback from the appointment critic.",
-    instruction="""You are a specialized appointment refinement assistance agent refining appointments based on feedback OR exiting the process.
+    instruction=f"""You are a specialized appointment refinement assistance agent refining appointments based on feedback OR exiting the process.
     **Current Appointments:**
     ```
     {{appointment_scheduling_result}}
@@ -177,8 +177,8 @@ appointment_booking_agent = Agent(
 sequential_appointment_agent = SequentialAgent(
     name="create_appointment_schedule_and_book_pipeline",
     # Run appointment scheduling agent first, then refine and book
-    sub_agents=[appointment_scheduling_agent, appointment_refinement_loop, appointment_booking_agent],
-    description="Proposes service appointments based on part orders, then iteratively refines it with critic using an exit tool and helps booking them.",
+    sub_agents=[appointment_scheduling_agent, appointment_refinement_loop],
+    description="Proposes service appointments based on part orders, then iteratively refines it with critic using an exit tool.",
 )
 
 # Notification sub-agent
@@ -266,7 +266,7 @@ root_agent = Agent(
     - Ask how you can help.
     After the user's request has been answered by you or a child agent, ask if there's anything else you can do to help. 
     When the user doesn't need anything else, politely thank them for contacting AIgentic Fleet Management.""",
-    sub_agents=[sequential_maintenance_agent, part_ordering_agent, sequential_appointment_agent, notification_agent],
+    sub_agents=[sequential_maintenance_agent, part_ordering_agent, sequential_appointment_agent, appointment_booking_agent, notification_agent],
     tools=[],
     model="gemini-2.0-flash"
 )
