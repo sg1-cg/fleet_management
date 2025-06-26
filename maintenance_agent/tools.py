@@ -261,21 +261,23 @@ def part_order_list():
     return db_query(query)
 
 
-def create_part_order(part_id: str, quantity: int):
+def create_part_order(part_id: str, vehicle_id: str, quantity: int):
     """
     Creates a new part order in the database.
 
     Args:
         part_id (str): The unique identifier of the vehicle part.
+        vehicle_id (str): The unique identifier of the vehicle.
         quantity (int): The quantity of the part to order.
 
     Returns:
         dict: The details of the created part order.
     """
     query = f"""
-    INSERT INTO `EV_Predictive_Maintenance.PART_ORDER` (Order_ID, Part_ID, Amount, Arrival_Date, Last_Update_Time, Price, State)
+    INSERT INTO `EV_Predictive_Maintenance.PART_ORDER` (Order_ID, Part_ID, Vehicle_ID, Amount, Arrival_Date, Last_Update_Time, Price, State)
     select GENERATE_UUID()
     , pd.part_id
+    , '{vehicle_id}'
     , {quantity}
     , current_date()+pd.Delivery_Time
     , current_timestamp()
