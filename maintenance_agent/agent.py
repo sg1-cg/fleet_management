@@ -1,4 +1,4 @@
-from google.adk.agents import Agent, ParallelAgent, SequentialAgent
+from google.adk.agents import Agent, ParallelAgent, SequentialAgent, LoopAgent
 
 # Import the tools
 from .tools import fleet_query, recall_query, health_query
@@ -6,8 +6,15 @@ from .tools import health_bulk_query, part_query, vehicle_appointment_query
 from .tools import vehicle_rental_query, part_delivery_time_query, part_order_query, part_order_list
 from .tools import create_part_order, create_appointment, vehicle_query, vehicle_list
 from .tools import notify
+from .tools import exit_loop
 
+
+# Define the model for the agents
 MODEL="gemini-2.0-flash"
+
+# Define the exact phrase the Critic should use to signal completion
+COMPLETION_PHRASE = "No major issues found."
+
 
 # Agents
 
@@ -77,14 +84,101 @@ appointment_scheduling_agent = Agent(
     You can schedule service appointments based on part orders.
     Steps:
     - Do not greet the user.
-    - Propose a date and time for the appointment based on order delivery date and vehicle rentals.
+    - Propose a date and time for the appointment based on order delivery date.
     - ALWAYS confirm the appointment details by the user before creating an appointment.
     - Use the tool `part_order_list` to retrieve part order without an appointment.
-    - Use the tool `vehicle_rental_query` to retrieve the future rental dates of a given vehicle.
-    - Use the tool `create_appointment` to create a new service appointment.
-    - Provide a brief summary of the appointment.
+    - Provide a brief summary of the appointments.
     - Transfer back to the parent agent without saying anything else.""",
-    tools=[vehicle_rental_query, create_appointment, part_order_list]
+    tools=[part_order_list],
+    output_key="appointment_scheduling_result"
+)
+
+# Appointment critic sub-agent
+appointment_critic_agent = Agent(
+    name="appointment_critic_agent",
+    model=MODEL,
+    description="Checks if the appointment is valid and reasonable, minimizing service interruption.",
+    instruction="""You are a specialized appointment critic assistance agent.
+    You can check if the appointment is valid and reasonable, taking into account vehicle rentals to minimize service interruption.
+    **Appointments to Review:**
+    ```
+    {{appointment_scheduling_result}}
+    ```
+
+    **Task:**
+    Review the appointments for conflicts taking into consideration vehicle rentals and part order delivery times.
+
+    IF you identify 1-2 *clear and actionable* ways the appointment schedule could be improved to avoid conflicts:
+    Provide these specific suggestions concisely. Output *only* the critique text.
+
+    ELSE IF the appointment schedule is not conflicting with any vehicle rentals or part order delivery times:
+    Respond *exactly* with the phrase "{COMPLETION_PHRASE}" and nothing else.
+
+    Do not add explanations. Output only the critique OR the exact completion phrase.""",
+    tools=[vehicle_rental_query, part_order_list],
+    output_key="appointment_critic_result"
+)
+
+# Appointment refinement sub-agent
+appointment_refinement_agent = Agent(
+    name="appointment_refinement_agent",
+    model=MODEL,
+    description="Refines appointment details based on feedback from the appointment critic.",
+    instruction="""You are a specialized appointment refinement assistance agent refining appointments based on feedback OR exiting the process.
+    **Current Appointments:**
+    ```
+    {{appointment_scheduling_result}}
+    ```
+    **Critique/Suggestions:**
+    {{appointment_critic_result}}
+
+    **Task:**
+    Analyze the 'Critique/Suggestions'.
+    IF the critique is *exactly* "{COMPLETION_PHRASE}":
+    You MUST call the 'exit_loop' function. Do not output any text.
+    ELSE (the critique contains actionable feedback):
+    Carefully apply the suggestions to improve the 'Current Appointments'. Output *only* the refined appointment schedule.
+
+    Do not add explanations. Either output the refined appointment schedule OR call the exit_loop function.""",
+    tools=[exit_loop],  # Provide the exit_loop tool
+    output_key="appointment_scheduling_result"
+)
+
+# Appointment refinement loop
+appointment_refinement_loop = LoopAgent(
+    name="appointment_refinement_loop",
+    sub_agents=[appointment_critic_agent, appointment_refinement_agent],
+    max_iterations=5 # Limit loops
+)
+
+# Appointment booking sub-agent
+appointment_booking_agent = Agent(
+    name="appointment_booking_agent",
+    model=MODEL_FAST,
+    description="Books service appointments based on refined appointment schedule.",
+    instruction="""You are a specialized appointment booking assistance agent.
+    You can book service appointments based on the refined appointment schedule.
+    **Refined Appointment Schedule:**
+    ```
+    {{appointment_scheduling_result}}
+    ```
+    Steps:
+    - Do not greet the user.
+    - ALWAYS confirm the appointments by the user before booking them.
+    - Use the tool `create_appointment` to book the appointments.
+    - Provide a brief summary of the booked appointments.
+    - Transfer back to the parent agent without saying anything else.""",
+    tools=[create_appointment]
+)
+
+# Create the SequentialAgent (Orchestrates the overall flow) ---
+# This is the main agent that will be run. It first executes the appointment scheduling agent
+# to populate the state, and then executes the refinement loop agent to produce the final output.
+sequential_appointment_agent = SequentialAgent(
+    name="create_appointment_schedule_and_book_pipeline",
+    # Run appointment scheduling agent first, then refine and book
+    sub_agents=[appointment_scheduling_agent, appointment_refinement_loop, appointment_booking_agent],
+    description="Proposes service appointments based on part orders, then iteratively refines it with critic using an exit tool and helps booking them.",
 )
 
 # Notification sub-agent
@@ -155,11 +249,11 @@ merger_agent = Agent(
 # Create the SequentialAgent (Orchestrates the overall flow) ---
 # This is the main agent that will be run. It first executes the parallel_maintenance_agent
 # to populate the state, and then executes the merger_agent to produce the final output.
-sequential_pipeline_agent = SequentialAgent(
+sequential_maintenance_agent = SequentialAgent(
     name="check_maintenance_needs_and_synthesis_pipeline",
     # Run parallel maintenance agent first, then merge
-    sub_agents=[parallel_maintenance_agent, merger_agent],
-    description="Coordinates parallel check of maintenance needs and synthesizes the results.",
+    sub_agents=[parallel_maintenance_agent, merger_agent, part_ordering_agent, appointment_scheduling_agent, appointment_refinement_loop],
+    description="Coordinates parallel check of maintenance needs and synthesizes the results, creating orders for required parts, scheduling appointments, and checking appointment validity considering service interruption.",
 )
 
 # The main agent
@@ -175,7 +269,7 @@ root_agent = Agent(
     - Ask how you can help.
     After the user's request has been answered by you or a child agent, ask if there's anything else you can do to help. 
     When the user doesn't need anything else, politely thank them for contacting AIgentic Fleet Management.""",
-    sub_agents=[sequential_pipeline_agent, notification_agent, part_ordering_agent, appointment_scheduling_agent],
+    sub_agents=[sequential_maintenance_agent, part_ordering_agent, sequential_appointment_agent, notification_agent],
     tools=[],
     model="gemini-2.0-flash"
 )
