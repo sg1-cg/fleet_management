@@ -154,7 +154,7 @@ appointment_refinement_loop = LoopAgent(
 # Appointment booking sub-agent
 appointment_booking_agent = Agent(
     name="appointment_booking_agent",
-    model=MODEL_FAST,
+    model=MODEL,
     description="Books service appointments based on refined appointment schedule.",
     instruction="""You are a specialized appointment booking assistance agent.
     You can book service appointments based on the refined appointment schedule.
@@ -252,8 +252,8 @@ merger_agent = Agent(
 sequential_maintenance_agent = SequentialAgent(
     name="check_maintenance_needs_and_synthesis_pipeline",
     # Run parallel maintenance agent first, then merge
-    sub_agents=[parallel_maintenance_agent, merger_agent, part_ordering_agent, appointment_scheduling_agent, appointment_refinement_loop],
-    description="Coordinates parallel check of maintenance needs and synthesizes the results, creating orders for required parts, scheduling appointments, and checking appointment validity considering service interruption.",
+    sub_agents=[parallel_maintenance_agent, merger_agent],
+    description="Coordinates parallel check of maintenance needs and synthesizes the results.",
 )
 
 # The main agent
