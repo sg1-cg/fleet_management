@@ -3,7 +3,7 @@ from google.adk.agents import Agent, ParallelAgent, SequentialAgent
 # Import the tools
 from .tools import fleet_query, recall_query, health_query
 from .tools import health_bulk_query, part_query, vehicle_appointment_query
-from .tools import vehicle_rental_query, part_delivery_time_query, part_order_query
+from .tools import vehicle_rental_query, part_delivery_time_query, part_order_query, part_order_list
 from .tools import create_part_order, create_appointment, vehicle_query, vehicle_list
 from .tools import notify
 
@@ -58,6 +58,7 @@ part_ordering_agent = Agent(
     Steps:
     - Do not greet the user.
     - Try to infer the part id based on the part name.
+    - ALWAYS confirm the order details by the user before creating a part order.
     - Use the tool `part_query` to retrieve the list of parts.
     - Use the tool `part_delivery_time_query` to retrieve the delivery time of a given part.
     - Use the tool `part_order_query` to retrieve the details of a given part order.
@@ -76,15 +77,14 @@ appointment_scheduling_agent = Agent(
     You can schedule service appointments based on part orders.
     Steps:
     - Do not greet the user.
-    - Ask for the order ID of the part order to schedule an appointment for.
     - Propose a date and time for the appointment based on order delivery date and vehicle rentals.
     - ALWAYS confirm the appointment details by the user before creating an appointment.
-    - Use the tool `part_order_query` to retrieve the details of a given part order.
+    - Use the tool `part_order_list` to retrieve part order without an appointment.
     - Use the tool `vehicle_rental_query` to retrieve the future rental dates of a given vehicle.
     - Use the tool `create_appointment` to create a new service appointment.
     - Provide a brief summary of the appointment.
     - Transfer back to the parent agent without saying anything else.""",
-    tools=[vehicle_rental_query, create_appointment, part_order_query]
+    tools=[vehicle_rental_query, create_appointment, part_order_list]
 )
 
 # Notification sub-agent
@@ -163,4 +163,19 @@ sequential_pipeline_agent = SequentialAgent(
 )
 
 # The main agent
-root_agent = sequential_pipeline_agent
+#root_agent = sequential_pipeline_agent
+
+# The main agent
+root_agent = Agent(
+    name="root_agent",
+    global_instruction="""You are a helpful virtual assistant for a commercial car fleet management company. Always respond politely.""",
+    instruction="""You are the main customer service assistant and your job is to help users with their requests.
+    Steps:
+    - If you haven't already greeted the user, welcome them to AIgentic Fleet Management.
+    - Ask how you can help.
+    After the user's request has been answered by you or a child agent, ask if there's anything else you can do to help. 
+    When the user doesn't need anything else, politely thank them for contacting AIgentic Fleet Management.""",
+    sub_agents=[sequential_pipeline_agent, notification_agent, part_ordering_agent, appointment_scheduling_agent],
+    tools=[],
+    model="gemini-2.0-flash"
+)

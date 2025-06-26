@@ -233,6 +233,26 @@ def part_order_query(order_id: str):
     return db_query(query)
 
 
+def part_order_list():
+    """
+    Retrieves part orders without a service appointment from the database.
+
+    Returns:
+        dict: The details of the part orders.
+    """
+    query = f"""
+    SELECT *
+    FROM `EV_Predictive_Maintenance.PART_ORDER`
+    WHERE `Order_ID` NOT IN (
+        SELECT `Order_ID`
+        FROM `EV_Predictive_Maintenance.APPOINTMENT`
+    )
+    ORDER BY `Arrival_Date` ASC
+    LIMIT 100
+    """
+    return db_query(query)
+
+
 def create_part_order(part_id: str, quantity: int):
     """
     Creates a new part order in the database.
